@@ -1,5 +1,6 @@
 import numpy as np
 from mpi4py import MPI
+import time
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 from tensorflow.keras.datasets import mnist
@@ -27,7 +28,7 @@ def train_model(model, x_train, y_train):
     model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
                   metrics=['accuracy'])
-    model.fit(x_train, y_train, epochs=5, batch_size=64, verbose=0)
+    model.fit(x_train, y_train, epochs=5, batch_size=64, validation_split=0.2)
 
 def main():
     # Load and preprocess the dataset
@@ -43,26 +44,54 @@ def main():
     end_idx = (rank + 1) * chunk_size if rank < size - 1 else len(x_train)
     x_train_chunk = x_train[start_idx:end_idx]
     y_train_chunk = y_train[start_idx:end_idx]
-
+    print(f"Rank: {rank}, Training data Size: X--> {x_train_chunk.shape}, y--> {y_train_chunk.shape}" )
     # Build the model
     model = build_model()
 
+    startTime = time.time()
     # Train the model in parallel
     train_model(model, x_train_chunk, y_train_chunk)
+    endTime = time.time()
+    totalTime = endTime - startTime
+    # Evaluate the model
+    test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
+    
+    print(f"Rank: {rank}, Test Loss: {test_loss}")
+    print(f"Rank: {rank}, Test Accuracy:{test_accuracy}")
+    print(f"Total Time Taken by process {rank} is {totalTime}")
+    gatherdTime = comm.gather(totalTime, root=4)
+    getherdTestAccuracy = comm.gather(test_accuracy, root=4)
 
-    # Gather the trained model weights
-    gathered_weights = comm.gather(model.get_weights(), root=0)
+    if rank == 4:
+        print(f"Total time: {gatherdTime}")
+        print(f"Average Time: {sum(gatherdTime)/size}")
+        print(f"Test Accuracy: {getherdTestAccuracy}")
+        print(f"Average Test Accuracy: {sum(getherdTestAccuracy)/size}")
+    # # Get the trained model weights
+    # weights = model.get_weights()
+    # print(f"Rank: {rank}, weights: {len(weights)}")
+    # # Gather the trained model weights
+    # gathered_weights = comm.gather(weights, root=0)
+    # print(gathered_weights.shape)
 
-    if rank == 0:
-        # Combine the gathered weights
-        final_weights = np.concatenate(gathered_weights, axis=0)
-        model.set_weights(final_weights)
+    # if rank == 0:
+    #     # Ensure all gathered weights have the same shape
+    #     max_weight_shapes = max(weights.shape for weights_list in gathered_weights for weights in weights_list)
+    #     for i in range(len(gathered_weights)):
+    #         for j in range(len(gathered_weights[i])):
+    #             current_shape = gathered_weights[i][j].shape
+    #             pad_width = ((0, max_weight_shapes[0] - current_shape[0]), (0, max_weight_shapes[1] - current_shape[1]))
+    #             gathered_weights[i][j] = np.pad(gathered_weights[i][j], pad_width, mode='constant')
+    #     final_weights = np.concatenate(gathered_weights, axis=0)
+    #     model.set_weights(final_weights)
 
-        # Evaluate the model
-        test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
+        # # Evaluate the model
+        # test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
 
-        print("Test Loss:", test_loss)
-        print("Test Accuracy:", test_accuracy)
+        # print("Test Loss:", test_loss)
+        # print("Test Accuracy:", test_accuracy)
+
+
 
 
 if __name__ == "__main__":
