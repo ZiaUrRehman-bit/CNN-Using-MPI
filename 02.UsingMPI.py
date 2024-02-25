@@ -28,7 +28,7 @@ def train_model(model, x_train, y_train):
     model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
                   metrics=['accuracy'])
-    model.fit(x_train, y_train, epochs=5, batch_size=64, validation_split=0.2)
+    model.fit(x_train, y_train, epochs=5, batch_size=64, validation_split=0.2, verbose=0)
 
 def main():
     # Load and preprocess the dataset
@@ -59,14 +59,30 @@ def main():
     print(f"Rank: {rank}, Test Loss: {test_loss}")
     print(f"Rank: {rank}, Test Accuracy:{test_accuracy}")
     print(f"Total Time Taken by process {rank} is {totalTime}")
+    
     gatherdTime = comm.gather(totalTime, root=4)
     getherdTestAccuracy = comm.gather(test_accuracy, root=4)
+
+    weights = model.get_weights()
+
+    gatherWeights = comm.gather(weights, root=4)
 
     if rank == 4:
         print(f"Total time: {gatherdTime}")
         print(f"Average Time: {sum(gatherdTime)/size}")
         print(f"Test Accuracy: {getherdTestAccuracy}")
         print(f"Average Test Accuracy: {sum(getherdTestAccuracy)/size}")
+        print(len(gatherWeights[7]))
+        # w = 0
+        # globalWeights = []
+        # for i in range(size):
+        #     for j in range(size):
+        #         w += gatherWeights[j][i]
+        #     globalWeights.append(w)
+        #     w = 0
+            
+
+        # print(f"Total Length of Weights: {globalWeights}")
     # # Get the trained model weights
     # weights = model.get_weights()
     # print(f"Rank: {rank}, weights: {len(weights)}")
