@@ -23,6 +23,7 @@ def build_model():
         Dense(10, activation='softmax')
     ])
     return model
+
 # Define the local CNN model
 def create_local_model():
     model = build_model()
@@ -52,6 +53,7 @@ def main():
     x_train_chunk = x_train[start_idx:end_idx]
     y_train_chunk = y_train[start_idx:end_idx]
     print(f"Rank: {rank}, Training data Size: X--> {x_train_chunk.shape}, y--> {y_train_chunk.shape}" )
+
     # Build the model
     model = build_model()
 
@@ -79,55 +81,29 @@ def main():
         print(f"Average Time: {sum(gatherdTime)/size}")
         print(f"Test Accuracy: {getherdTestAccuracy}")
         print(f"Average Test Accuracy: {sum(getherdTestAccuracy)/size}")
-        # print(len(gatherWeights[0][9]),len(gatherWeights[0][8]),
-        #       len(gatherWeights[0][7]),len(gatherWeights[0][6]),
-        #       len(gatherWeights[0][5]),len(gatherWeights[0][4]),
-        #       len(gatherWeights[0][3]),len(gatherWeights[0][2]),
-        #       len(gatherWeights[0][1]),len(gatherWeights[0][0]),)
-        w = 0
-        globalWeights = []
-        for i in range(10):
-            for j in range(size):
-                w += gatherWeights[j][i]
-            w = w/8
-            globalWeights.append(w)
-            w = 0
-            
 
-        # print(f"Total Length of Weights: {globalWeights[9]}")
+        # Weighted averaging of model weights
+        accuracies = getherdTestAccuracy
+        models_weights = gatherWeights
+        total_accuracy = sum(accuracies)
+        weights = [accuracy / total_accuracy for accuracy in accuracies]
 
-        # Create a global model with averaged weights
-        # globalModel = create_local_model()
-        model.set_weights(globalWeights)
+        # Combine weights with model parameters
+        global_weights = []
+        for model_weights, weight in zip(models_weights, weights):
+            weighted_params = [param * weight for param in model_weights]
+            global_weights.append(weighted_params)
+
+        # Sum up the weighted parameters across all models to obtain the final global model parameters
+        final_weights = [sum(weight) for weight in zip(*global_weights)]
+
+        # Apply the final weights to the global model
+        model.set_weights(final_weights)
+
+        # Evaluate the global model
         test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
         print("Test Loss: Global Model-->", test_loss)
         print("Test Accuracy: Global Model-->", test_accuracy)
-    # # Get the trained model weights
-    # weights = model.get_weights()
-    # print(f"Rank: {rank}, weights: {len(weights)}")
-    # # Gather the trained model weights
-    # gathered_weights = comm.gather(weights, root=0)
-    # print(gathered_weights.shape)
-
-    # if rank == 0:
-    #     # Ensure all gathered weights have the same shape
-    #     max_weight_shapes = max(weights.shape for weights_list in gathered_weights for weights in weights_list)
-    #     for i in range(len(gathered_weights)):
-    #         for j in range(len(gathered_weights[i])):
-    #             current_shape = gathered_weights[i][j].shape
-    #             pad_width = ((0, max_weight_shapes[0] - current_shape[0]), (0, max_weight_shapes[1] - current_shape[1]))
-    #             gathered_weights[i][j] = np.pad(gathered_weights[i][j], pad_width, mode='constant')
-    #     final_weights = np.concatenate(gathered_weights, axis=0)
-    #     model.set_weights(final_weights)
-
-        # # Evaluate the model
-        # test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
-
-        # print("Test Loss:", test_loss)
-        # print("Test Accuracy:", test_accuracy)
-
-
-
 
 if __name__ == "__main__":
     main()
