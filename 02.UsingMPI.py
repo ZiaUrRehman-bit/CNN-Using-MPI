@@ -72,17 +72,21 @@ def main():
         print(f"Average Time: {sum(gatherdTime)/size}")
         print(f"Test Accuracy: {getherdTestAccuracy}")
         print(f"Average Test Accuracy: {sum(getherdTestAccuracy)/size}")
-        print(len(gatherWeights[7]))
-        # w = 0
-        # globalWeights = []
-        # for i in range(size):
-        #     for j in range(size):
-        #         w += gatherWeights[j][i]
-        #     globalWeights.append(w)
-        #     w = 0
+        # print(len(gatherWeights[0][9]),len(gatherWeights[0][8]),
+        #       len(gatherWeights[0][7]),len(gatherWeights[0][6]),
+        #       len(gatherWeights[0][5]),len(gatherWeights[0][4]),
+        #       len(gatherWeights[0][3]),len(gatherWeights[0][2]),
+        #       len(gatherWeights[0][1]),len(gatherWeights[0][0]),)
+        w = 0
+        globalWeights = []
+        for i in range(10):
+            for j in range(size):
+                w += gatherWeights[j][i]
+            globalWeights.append(w)
+            w = 0
             
 
-        # print(f"Total Length of Weights: {globalWeights}")
+        print(f"Total Length of Weights: {globalWeights[9]/8}")
     # # Get the trained model weights
     # weights = model.get_weights()
     # print(f"Rank: {rank}, weights: {len(weights)}")
