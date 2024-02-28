@@ -84,24 +84,24 @@ def main():
         #       len(gatherWeights[0][5]),len(gatherWeights[0][4]),
         #       len(gatherWeights[0][3]),len(gatherWeights[0][2]),
         #       len(gatherWeights[0][1]),len(gatherWeights[0][0]),)
-        w = 0
-        globalWeights = []
-        for i in range(10):
-            for j in range(size):
-                w += gatherWeights[j][i]
-            w = w/8
-            globalWeights.append(w)
-            w = 0
+        # w = 0
+        # globalWeights = []
+        # for i in range(10):
+        #     for j in range(size):
+        #         w += gatherWeights[j][i]
+        #     w = w/8
+        #     globalWeights.append(w)
+        #     w = 0
             
 
-        # print(f"Total Length of Weights: {globalWeights[9]}")
+        # # print(f"Total Length of Weights: {globalWeights[9]}")
 
-        # Create a global model with averaged weights
-        # globalModel = create_local_model()
-        model.set_weights(globalWeights)
-        test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
-        print("Test Loss: Global Model-->", test_loss)
-        print("Test Accuracy: Global Model-->", test_accuracy)
+        # # Create a global model with averaged weights
+        # # globalModel = create_local_model()
+        # model.set_weights(globalWeights)
+        # test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
+        # print("Test Loss: Global Model-->", test_loss)
+        # print("Test Accuracy: Global Model-->", test_accuracy)
     # # Get the trained model weights
     # weights = model.get_weights()
     # print(f"Rank: {rank}, weights: {len(weights)}")
