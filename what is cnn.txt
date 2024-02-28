@@ -1,0 +1,19 @@
+what is cnn?
+applications?
+buildin packages run serially which consume time and computional resources 
+if parallel then 
+our computational time reduce 
+organization
+
+literature
+cnn, federated learning, 
+single resources,
+
+cnn..> architecture.. working 
+
+methodolgy
+our cnn architecture
+
+dataset
+experimental setup
+results and discussion
