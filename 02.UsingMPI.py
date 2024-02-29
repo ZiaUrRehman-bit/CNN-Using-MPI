@@ -70,63 +70,16 @@ def main():
     gatherdTime = comm.gather(totalTime, root=4)
     getherdTestAccuracy = comm.gather(test_accuracy, root=4)
 
-    weights = model.get_weights()
+    # weights = model.get_weights()
 
-    gatherWeights = comm.gather(weights, root=4)
+    # gatherWeights = comm.gather(weights, root=4)
 
     if rank == 4:
         print(f"Total time: {gatherdTime}")
         print(f"Average Time: {sum(gatherdTime)/size}")
         print(f"Test Accuracy: {getherdTestAccuracy}")
         print(f"Average Test Accuracy: {sum(getherdTestAccuracy)/size}")
-        # print(len(gatherWeights[0][9]),len(gatherWeights[0][8]),
-        #       len(gatherWeights[0][7]),len(gatherWeights[0][6]),
-        #       len(gatherWeights[0][5]),len(gatherWeights[0][4]),
-        #       len(gatherWeights[0][3]),len(gatherWeights[0][2]),
-        #       len(gatherWeights[0][1]),len(gatherWeights[0][0]),)
-        # w = 0
-        # globalWeights = []
-        # for i in range(10):
-        #     for j in range(size):
-        #         w += gatherWeights[j][i]
-        #     w = w/8
-        #     globalWeights.append(w)
-        #     w = 0
-            
-
-        # # print(f"Total Length of Weights: {globalWeights[9]}")
-
-        # # Create a global model with averaged weights
-        # # globalModel = create_local_model()
-        # model.set_weights(globalWeights)
-        # test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
-        # print("Test Loss: Global Model-->", test_loss)
-        # print("Test Accuracy: Global Model-->", test_accuracy)
-    # # Get the trained model weights
-    # weights = model.get_weights()
-    # print(f"Rank: {rank}, weights: {len(weights)}")
-    # # Gather the trained model weights
-    # gathered_weights = comm.gather(weights, root=0)
-    # print(gathered_weights.shape)
-
-    # if rank == 0:
-    #     # Ensure all gathered weights have the same shape
-    #     max_weight_shapes = max(weights.shape for weights_list in gathered_weights for weights in weights_list)
-    #     for i in range(len(gathered_weights)):
-    #         for j in range(len(gathered_weights[i])):
-    #             current_shape = gathered_weights[i][j].shape
-    #             pad_width = ((0, max_weight_shapes[0] - current_shape[0]), (0, max_weight_shapes[1] - current_shape[1]))
-    #             gathered_weights[i][j] = np.pad(gathered_weights[i][j], pad_width, mode='constant')
-    #     final_weights = np.concatenate(gathered_weights, axis=0)
-    #     model.set_weights(final_weights)
-
-        # # Evaluate the model
-        # test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
-
-        # print("Test Loss:", test_loss)
-        # print("Test Accuracy:", test_accuracy)
-
-
+        
 
 
 if __name__ == "__main__":

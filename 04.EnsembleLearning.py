@@ -24,14 +24,6 @@ def build_model():
     ])
     return model
 
-# Define the local CNN model
-def create_local_model():
-    model = build_model()
-    model.compile(optimizer='adam',
-                  loss='sparse_categorical_crossentropy',
-                  metrics=['accuracy'])
-    return model
-
 def train_model(model, x_train, y_train):
     model.compile(optimizer='adam',
                   loss='categorical_crossentropy',
@@ -53,24 +45,35 @@ def main():
     x_train_chunk = x_train[start_idx:end_idx]
     y_train_chunk = y_train[start_idx:end_idx]
 
-    # Build and train the model
+    # Build and train the local model
     model = build_model()
+    startTime = time.time()
     train_model(model, x_train_chunk, y_train_chunk)
-
-    # Evaluate the model
-    test_loss, test_accuracy = model.evaluate(x_test, y_test, verbose=0)
-    print(f"Rank: {rank}, Test Loss: {test_loss}")
-    print(f"Rank: {rank}, Test Accuracy:{test_accuracy}")
-
-    # Gather test accuracies from all processes
-    gathered_test_accuracies = comm.gather(test_accuracy, root=0)
+    endTime = time.time()
+    totalTime = endTime - startTime
+    print(f"Total Time Taken by process {rank} is {totalTime}")
+    
+    gatherdTime = comm.gather(totalTime, root=0)
+    # Gather all models to process 0
+    gathered_models = comm.gather(model, root=0)
 
     if rank == 0:
-        # Calculate ensemble prediction
-        ensemble_predictions = [1 if acc > 0.5 else 0 for acc in gathered_test_accuracies]
-        majority_vote = np.sum(ensemble_predictions) / len(ensemble_predictions)
+        # Predictions of all models on the test dataset
+        print(f"Total time: {gatherdTime}")
+        print(f"Average Time: {sum(gatherdTime)/size}")
+        all_predictions = []
+        for gathered_model in gathered_models:
+            predictions = np.argmax(gathered_model.predict(x_test), axis=1)
+            all_predictions.append(predictions)
 
-        print("Ensemble Test Accuracy:", majority_vote)
+        # Ensemble prediction by majority voting
+        ensemble_predictions = np.stack(all_predictions, axis=0)
+        ensemble_predictions = np.transpose(ensemble_predictions)
+        final_predictions = np.apply_along_axis(lambda x: np.bincount(x).argmax(), axis=1, arr=ensemble_predictions)
+
+        # Calculate ensemble accuracy
+        ensemble_accuracy = np.mean(final_predictions == np.argmax(y_test, axis=1))
+        print(f"Ensemble Model Test Accuracy: {ensemble_accuracy}")
 
 if __name__ == "__main__":
     main()
