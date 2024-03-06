@@ -5,6 +5,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 from tensorflow.keras.datasets import mnist
 from tensorflow.keras.utils import to_categorical
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
 
 # Initialize MPI
 comm = MPI.COMM_WORLD
@@ -74,6 +75,20 @@ def main():
         # Calculate ensemble accuracy
         ensemble_accuracy = np.mean(final_predictions == np.argmax(y_test, axis=1))
         print(f"Ensemble Model Test Accuracy: {ensemble_accuracy}")
+
+        y_test_int = np.argmax(y_test, axis=1)
+
+        # Calculate precision, recall, F1-score, and accuracy
+        precision = precision_score(y_test_int, final_predictions, average='weighted')
+        recall = recall_score(y_test_int, final_predictions, average='weighted')
+        f1 = f1_score(y_test_int, final_predictions, average='weighted')
+        accuracy = accuracy_score(y_test_int, final_predictions)
+
+        # Print the results
+        print(f'Precision: {precision}')
+        print(f'Recall: {recall}')
+        print(f'F1-score: {f1}')
+        print(f'Accuracy: {accuracy}')
 
 if __name__ == "__main__":
     main()
